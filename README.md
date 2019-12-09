@@ -10,6 +10,24 @@ Featuretools' DFS as a scikit-learn transformer
 pip install featuretools_sklearn_transformer
 ```
 
+### Use
+
+```python
+from featuretools.sklearn_transform import DFSTransformer
+
+# Example Pipeline
+pipeline = Pipeline(steps=[
+    ('ft', DFSTransformer(entityset=es,
+                          target_entity="customers",
+                          max_features=20)),
+    ("numeric", FunctionTransformer(select_numeric, validate=False)),
+    ('imp', SimpleImputer()),
+    ('et', ExtraTreesClassifier(n_estimators=10))
+])
+
+results = pipeline.fit(cutoff_time, y=cutoff_time.label).predict(cutoff_time)
+```
+
 ## Feature Labs
 <a href="https://www.featurelabs.com/">
     <img src="http://www.featurelabs.com/wp-content/uploads/2017/12/logo.png" alt="Featuretools" />
