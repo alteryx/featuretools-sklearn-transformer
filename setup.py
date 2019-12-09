@@ -21,7 +21,7 @@ setup(
     include_package_data=True,
     entry_points={
         'featuretools_plugin': [
-            'sklearn_transform = featuretools_sklearn_transform.__init__',
+            'sklearn_transform = featuretools_sklearn_transformer',
         ],
     },
 )
