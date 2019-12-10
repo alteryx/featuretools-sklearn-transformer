@@ -24,7 +24,3 @@ installdeps:
 	pip install --upgrade pip -q
 	pip install -e . -q
 	pip install -r test-requirements.txt -q
-
-.PHONY: entry-point-test
-entry-point-test:
-	cd ~ && python -c "from featuretools import sklearn_transform"
