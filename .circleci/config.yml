@@ -106,8 +106,8 @@ workflows:
           image_tag: python:3.7
           codecov: true
       - Entry Point Test:
-            name: Py35 - Entry Point Test
-            image_tag: python:3.5
+          name: Py35 - Entry Point Test
+          image_tag: python:3.5
       - Entry Point Test:
           name: Py36 - Entry Point Test
           image_tag: python:3.6
