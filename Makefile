@@ -26,5 +26,5 @@ installdeps:
 	pip install -r test-requirements.txt -q
 
 .PHONY: entry-point-test
-entry-point-test:py
+entry-point-test:
 	cd ~ && python -c "from featuretools.wrappers.sklearn import DFSTransformer"
