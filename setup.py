@@ -21,7 +21,7 @@ setup(
     include_package_data=True,
     entry_points={
         "featuretools_plugin": [
-            'wrappers.sklearn = featuretools_sklearn_transformer',
+            'wrappers = featuretools_sklearn_transformer',
         ],
     },
 )

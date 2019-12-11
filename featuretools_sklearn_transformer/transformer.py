@@ -95,7 +95,7 @@ class DFSTransformer(TransformerMixin):
                 import featuretools as ft
                 import pandas as pd
 
-                from featuretools.wrappers.sklearn import DFSTransformer
+                from featuretools.wrappers import DFSTransformer
                 from sklearn.pipeline import Pipeline
                 from sklearn.ensemble import ExtraTreesClassifier
 
