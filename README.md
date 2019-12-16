@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/FeatureLabs/featuretools_sklearn_transformer/tree/master.svg?style=shield)](https://circleci.com/gh/FeatureLabs/featuretools_sklearn_transformer/tree/master)
 [![codecov](https://codecov.io/gh/FeatureLabs/featuretools_sklearn_transformer/branch/master/graph/badge.svg)](https://codecov.io/gh/FeatureLabs/featuretools_sklearn_transformer)
 
-Featuretools' DFS as a scikit-learn transformer
+[Featuretools](https://github.com/FeatureLabs/featuretools)' DFS as a scikit-learn transformer
 
 ### Install
 ```shell
