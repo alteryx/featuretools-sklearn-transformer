@@ -20,8 +20,8 @@ setup(
     long_description_content_type='text/markdown',
     include_package_data=True,
     entry_points={
-        'featuretools_plugin': [
-            'sklearn_transform = featuretools_sklearn_transformer',
+        "featuretools_plugin": [
+            'wrappers = featuretools_sklearn_transformer',
         ],
     },
 )

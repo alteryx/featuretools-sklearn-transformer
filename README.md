@@ -13,19 +13,43 @@ pip install featuretools_sklearn_transformer
 ### Use
 
 ```python
-from featuretools.sklearn_transform import DFSTransformer
+import featuretools as ft
+import pandas as pd
 
-# Example Pipeline
+from featuretools.wrappers import DFSTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import ExtraTreesClassifier
+
+# Get examle data
+n_customers = 3
+es = ft.demo.load_mock_customer(return_entityset=True, n_customers=5)
+y = [True, False, True]
+
+# Build pipeline
 pipeline = Pipeline(steps=[
     ('ft', DFSTransformer(entityset=es,
-                          target_entity="customers",
-                          max_features=20)),
-    ("numeric", FunctionTransformer(select_numeric, validate=False)),
-    ('imp', SimpleImputer()),
-    ('et', ExtraTreesClassifier(n_estimators=10))
+                            target_entity="customers",
+                            max_features=3)),
+    ('et', ExtraTreesClassifier(n_estimators=100))
 ])
 
-results = pipeline.fit(cutoff_time, y=cutoff_time.label).predict(cutoff_time)
+# Fit and predict
+pipeline.fit([1, 2, 3], y=y) # fit on first 3 customers
+pipeline.predict_proba([4,5]) # predict probability of each class on last 2
+pipeline.predict([4,5]) # predict on last 2
+
+# Same as above, but using cutoff times
+ct = pd.DataFrame()
+ct['customer_id'] = [1, 2, 3, 4, 5]
+ct['time'] = pd.to_datetime(['2014-1-1 04:00',
+                                '2014-1-2 17:20',
+                                '2014-1-4 09:53',
+                                '2014-1-4 13:48',
+                                '2014-1-5 15:32'])
+
+pipeline.fit(ct.head(3), y=y)
+pipeline.predict_proba(ct.tail(2))
+pipeline.predict(ct.tail(2))
 ```
 
 ## Feature Labs

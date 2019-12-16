@@ -95,6 +95,7 @@ class DFSTransformer(TransformerMixin):
                 import featuretools as ft
                 import pandas as pd
 
+                from featuretools.wrappers import DFSTransformer
                 from sklearn.pipeline import Pipeline
                 from sklearn.ensemble import ExtraTreesClassifier
 
@@ -105,9 +106,9 @@ class DFSTransformer(TransformerMixin):
 
                 # Build dataset
                 pipeline = Pipeline(steps=[
-                    ('ft', ft.wrappers.DFSTransformer(entityset=es,
-                                                      target_entity="customers",
-                                                      max_features=3)),
+                    ('ft', DFSTransformer(entityset=es,
+                                          target_entity="customers",
+                                          max_features=3)),
                     ('et', ExtraTreesClassifier(n_estimators=100))
                 ])
 

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from featuretools.demo.mock_customer import load_mock_customer
-from featuretools.wrappers.sklearn import DFSTransformer
+from featuretools.wrappers import DFSTransformer
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import GridSearchCV, cross_val_score
