@@ -108,7 +108,7 @@ class DFSTransformer(TransformerMixin):
                 pipeline = Pipeline(steps=[
                     ('ft', DFSTransformer(entityset=es,
                                           target_entity="customers",
-                                          max_features=3)),
+                                          max_features=2)),
                     ('et', ExtraTreesClassifier(n_estimators=100))
                 ])
 
