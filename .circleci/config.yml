@@ -5,7 +5,6 @@ executors:
     parameters:
       image_tag:
         type: string
-        default: python:3.7
     docker:
       - image: circleci/<< parameters.image_tag >>
 
@@ -29,7 +28,6 @@ jobs:
     parameters:
       image_tag:
         type: string
-        default: python:3.7
     executor:
       name: python
       image_tag: << parameters.image_tag >>
@@ -44,7 +42,6 @@ jobs:
     parameters:
       image_tag:
         type: string
-        default: python:3.7
       codecov:
         type: boolean
         default: false
@@ -59,7 +56,8 @@ jobs:
             source python/bin/activate
             make -C package unit-tests --makefile ../Makefile
       - when:
-          condition: << parameters.codecov >>
+          condition:
+            equal: [ "3.6", << parameters.image_tag >> ]
           steps:
             - run:
                 name: Code Coverage
@@ -71,7 +69,6 @@ jobs:
     parameters:
       image_tag:
         type: string
-        default: python:3.7
     executor:
       name: python
       image_tag: << parameters.image_tag >>
@@ -87,30 +84,17 @@ workflows:
   Integration Tests:
     jobs:
       - Lint Tests:
-          name: Py35 - Lint Tests
-          image_tag: python:3.5
-      - Lint Tests:
-          name: Py36 - Lint Tests
-          image_tag: python:3.6
-      - Lint Tests:
-          name: Py37 - Lint Tests
-          image_tag: python:3.7
+          matrix:
+            parameters:
+              image_tag: ["3.6", "3.7", "3.8"]
+            name: Py<<matrix.image_tag>> - Lint Tests
       - Unit Tests:
-          name: Py35 - Unit Tests
-          image_tag: python:3.5
-      - Unit Tests:
-          name: Py36 - Unit Tests
-          image_tag: python:3.6
-      - Unit Tests:
-          name: Py37 - Unit Tests
-          image_tag: python:3.7
-          codecov: true
+          matrix:
+            parameters:
+              image_tag: ["3.6", "3.7", "3.8"]
+            name: Py<<matrix.image_tag>> - Unit Tests
       - Entry Point Test:
-          name: Py35 - Entry Point Test
-          image_tag: python:3.5
-      - Entry Point Test:
-          name: Py36 - Entry Point Test
-          image_tag: python:3.6
-      - Entry Point Test:
-          name: Py37 - Entry Point Test
-          image_tag: python:3.7
+          matrix:
+            parameters:
+              image_tag: ["3.6", "3.7", "3.8"]
+            name: Py<<matrix.image_tag>> - Entry Point Test
