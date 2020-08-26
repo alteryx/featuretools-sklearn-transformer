@@ -6,7 +6,7 @@ executors:
       image_tag:
         type: string
     docker:
-      - image: circleci/<< parameters.image_tag >>
+      - image: circleci/python:<< parameters.image_tag >>
 
 commands:
   installation:
