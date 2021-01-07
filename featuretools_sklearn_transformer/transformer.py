@@ -291,7 +291,7 @@ class DFSTransformer(TransformerMixin):
             relationships = self.relationships
 
         target_index = entities[self.target_entity][1]
-        filtered_df = df[df[target_index].isin(instances)]
+        filtered_df = df.loc[instances]
         time_index = entities[self.target_entity][2]
         variable_types = entities[self.target_entity][3]
         entities[self.target_entity] = (filtered_df, target_index, time_index, variable_types)
