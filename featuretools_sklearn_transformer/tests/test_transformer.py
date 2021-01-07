@@ -112,3 +112,42 @@ def test_sklearn_cuttoff(pipeline):
     results = pipeline.fit(ct, y=ct.label).predict(ct)
 
     assert len(results) == 3
+
+
+def test_cfm_uses_filtered_target_df(es):
+    pipeline = Pipeline(steps=[
+        ('ft', DFSTransformer(entityset=es, target_entity='transactions'))
+    ])
+
+    train_ids = [1, 2, 3]
+    fm_train = pipeline.fit_transform(X=train_ids)
+    assert all(fm_train['sessions.COUNT(transactions)'] == [1, 1, 1])
+    assert set(fm_train.index.values) == set(train_ids)
+
+    test_ids = [10, 55, 853]
+    fm_test = pipeline.transform(test_ids)
+    assert all(fm_test['sessions.COUNT(transactions)'] == [1, 2, 2])
+    assert set(fm_test.index.values) == set(test_ids)
+
+    # Test with entities and relationships input
+    entities = {}
+    relationships = []
+    for entity in es.entities:
+        entities[entity.id] = (entity.df, entity.index, entity.time_index, entity.variable_types)
+    for rel in es.relationships:
+        relationships.append((rel.parent_entity.id,
+                              rel.parent_variable.id,
+                              rel.child_entity.id,
+                              rel.child_variable.id))
+    
+    pipeline2 = Pipeline(steps=[
+        ('ft', DFSTransformer(entityset=es, target_entity='transactions'))
+    ])
+
+    fm_train2 = pipeline2.fit_transform(X=train_ids)
+    assert all(fm_train2['sessions.COUNT(transactions)'] == [1, 1, 1])
+    assert set(fm_train2.index.values) == set(train_ids)
+
+    fm_test2 = pipeline2.transform(test_ids)
+    assert all(fm_test2['sessions.COUNT(transactions)'] == [1, 2, 2])
+    assert set(fm_test2.index.values) == set(test_ids)

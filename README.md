@@ -12,6 +12,12 @@ pip install featuretools_sklearn_transformer
 
 ### Use
 
+To use the transformer in a pipeline, initialize an instance of the transformer by passing in
+an entityset, or a list of entities and relationships. The input contain the complete set of data, including
+both the training examples and the test examples. When calling `fit` or `transform`, simply pass in a
+list of instance id values for the target entity that you would like to use in the pipeline. The transformer
+will then create a feature matrix using only the specified instances.
+
 ```python
 import featuretools as ft
 import pandas as pd
@@ -20,7 +26,7 @@ from featuretools.wrappers import DFSTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import ExtraTreesClassifier
 
-# Get examle data
+# Get example data
 n_customers = 3
 es = ft.demo.load_mock_customer(return_entityset=True, n_customers=5)
 y = [True, False, True]
@@ -52,9 +58,8 @@ pipeline.predict_proba(ct.tail(2))
 pipeline.predict(ct.tail(2))
 ```
 
-## Feature Labs
-<a href="https://www.featurelabs.com/">
-    <img src="http://www.featurelabs.com/wp-content/uploads/2017/12/logo.png" alt="Featuretools" />
-</a>
+## Built at Alteryx Innovation Labs
 
-featuretools-sklearn-transformer is an open source project created by [Feature Labs](https://www.featurelabs.com/). To see the other open source projects we're working on visit Feature Labs [Open Source](https://www.featurelabs.com/open). If building impactful data science pipelines is important to you or your business, please [get in touch](https://www.featurelabs.com/contact/).
+<a href="https://www.alteryx.com/innovation-labs">
+    <img src="https://evalml-web-images.s3.amazonaws.com/alteryx_innovation_labs.png" alt="Alteryx Innovation Labs" />
+</a>
