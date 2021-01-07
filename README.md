@@ -13,8 +13,8 @@ pip install featuretools_sklearn_transformer
 ### Use
 
 To use the transformer in a pipeline, initialize an instance of the transformer by passing in
-an entityset, or a list of entities and relationships. The input contain the complete set of data, including
-both the training examples and the test examples. When calling `fit` or `transform`, simply pass in a
+an entityset, or a list of entities and relationships. The input should contain the complete set of data,
+including both the training examples and the test examples. When calling `fit` or `transform`, pass in a
 list of instance id values for the target entity that you would like to use in the pipeline. The transformer
 will then create a feature matrix using only the specified instances.
 
