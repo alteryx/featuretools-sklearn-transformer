@@ -139,7 +139,7 @@ def test_cfm_uses_filtered_target_df(es):
                               rel.parent_variable.id,
                               rel.child_entity.id,
                               rel.child_variable.id))
-    
+
     pipeline2 = Pipeline(steps=[
         ('ft', DFSTransformer(entityset=es, target_entity='transactions'))
     ])
