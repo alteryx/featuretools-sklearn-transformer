@@ -1,5 +1,3 @@
-import numpy as np
-import pandas as pd
 from featuretools.computational_backends import calculate_feature_matrix
 from featuretools.synthesis import dfs
 from sklearn.base import TransformerMixin
@@ -200,14 +198,14 @@ class DFSTransformer(TransformerMixin):
         else:
             es = X
             cutoff_time = None
-    
+
         X_transformed = calculate_feature_matrix(
             features=self.feature_defs,
             instance_ids=None,
             cutoff_time=cutoff_time,
             entityset=es,
             verbose=self.verbose)
-        
+
         return X_transformed
 
     def get_params(self, deep=True):

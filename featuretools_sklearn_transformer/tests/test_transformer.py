@@ -15,6 +15,7 @@ from sklearn.preprocessing import FunctionTransformer, StandardScaler
 def select_numeric(df):
     return df.select_dtypes(exclude=['object'])
 
+
 @pytest.fixture
 def es():
     es = load_mock_customer(n_customers=15,
@@ -150,7 +151,6 @@ def test_cfm_uses_filtered_target_df(es):
     assert all(fm_train['sessions.COUNT(transactions)'] == [1, 1, 1])
     assert set(fm_train.index.values) == set(train_ids)
 
-    
     fm_test = pipeline.transform(test_es)
     assert all(fm_test['sessions.COUNT(transactions)'] == [1, 2, 2])
     assert set(fm_test.index.values) == set(test_ids)
@@ -165,7 +165,7 @@ def filter_transactions(es, ids):
     transactions_df = transactions_df.loc[ids]
     sessions_df = sessions_df[sessions_df['session_id'].isin(transactions_df['session_id'].values)]
     products_df = products_df[products_df['product_id'].isin(transactions_df['product_id'].values)]
-    customer_df = customers_df[customers_df['customer_id'].isin(sessions_df['customer_id'].values)]
+    customers_df = customers_df[customers_df['customer_id'].isin(sessions_df['customer_id'].values)]
     new_es['customers'].df = customers_df
     new_es['sessions'].df = sessions_df
     new_es['transactions'].df = transactions_df
