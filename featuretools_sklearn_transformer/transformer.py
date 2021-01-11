@@ -1,5 +1,3 @@
-import copy
-
 import numpy as np
 import pandas as pd
 from featuretools.computational_backends import calculate_feature_matrix
@@ -151,67 +149,43 @@ class DFSTransformer(TransformerMixin):
         self.max_features = max_features
         self.verbose = verbose
 
-    def fit(self, cutoff_time_ids, y=None):
+    def fit(self, X, y=None):
         """Wrapper for DFS
 
-            Calculates a feature matrix and features given a dictionary of
-            entities and a list of relationships.
-
-            Args:
-                cutoff_time_ids (list | DataFrame): Instances filtered to
-                    calculate features on.
+            Calculates a list of features given a dictionary of
+            entities and a list of relationships. Alternatively,
+            an EntitySet can be passed instead of the entities
+            and relationships.
 
             See Also:
                 :func:`synthesis.dfs`
         """
-        if isinstance(cutoff_time_ids, (list, np.ndarray, pd.Series)):
-            self.feature_defs = dfs(entities=self.entities,
-                                    relationships=self.relationships,
-                                    entityset=self.entityset,
-                                    target_entity=self.target_entity,
-                                    instance_ids=cutoff_time_ids,
-                                    agg_primitives=self.agg_primitives,
-                                    trans_primitives=self.trans_primitives,
-                                    allowed_paths=self.allowed_paths,
-                                    max_depth=self.max_depth,
-                                    ignore_entities=self.ignore_entities,
-                                    ignore_variables=self.ignore_variables,
-                                    seed_features=self.seed_features,
-                                    drop_contains=self.drop_contains,
-                                    drop_exact=self.drop_exact,
-                                    where_primitives=self.where_primitives,
-                                    max_features=self.max_features,
-                                    features_only=True,
-                                    verbose=self.verbose)
-
-        elif isinstance(cutoff_time_ids, pd.DataFrame):
-            self.feature_defs = dfs(entities=self.entities,
-                                    relationships=self.relationships,
-                                    entityset=self.entityset,
-                                    target_entity=self.target_entity,
-                                    cutoff_time=cutoff_time_ids,
-                                    agg_primitives=self.agg_primitives,
-                                    trans_primitives=self.trans_primitives,
-                                    allowed_paths=self.allowed_paths,
-                                    max_depth=self.max_depth,
-                                    ignore_entities=self.ignore_entities,
-                                    ignore_variables=self.ignore_variables,
-                                    seed_features=self.seed_features,
-                                    drop_contains=self.drop_contains,
-                                    drop_exact=self.drop_exact,
-                                    where_primitives=self.where_primitives,
-                                    max_features=self.max_features,
-                                    features_only=True,
-                                    verbose=self.verbose)
+        if isinstance(X, tuple):
+            es = X[0]
         else:
-            raise TypeError('instance_ids must be a list, np.ndarray, pd.Series, or pd.DataFrame')
+            es = X
+        self.feature_defs = dfs(entityset=es,
+                                target_entity=self.target_entity,
+                                agg_primitives=self.agg_primitives,
+                                trans_primitives=self.trans_primitives,
+                                allowed_paths=self.allowed_paths,
+                                max_depth=self.max_depth,
+                                ignore_entities=self.ignore_entities,
+                                ignore_variables=self.ignore_variables,
+                                seed_features=self.seed_features,
+                                drop_contains=self.drop_contains,
+                                drop_exact=self.drop_exact,
+                                where_primitives=self.where_primitives,
+                                max_features=self.max_features,
+                                features_only=True,
+                                verbose=self.verbose)
 
         return self
 
-    def transform(self, cutoff_time_ids):
-        """Wrapper for calculate_feature_matix
+    def transform(self, X):
+        """Wrapper for calculate_feature_matrix
 
-            Calculates a matrix for a given set of instance ids and calculation
+            Calculates a feature matrix for a the given set of instance ids and calculation
             times.
 
             Args:
@@ -221,27 +195,19 @@ class DFSTransformer(TransformerMixin):
             See Also:
                 :func:`computational_backends.calculate_feature_matrix`
         """
-        if isinstance(cutoff_time_ids, (list, np.ndarray, pd.Series)):
-            entities, relationships = self._filter_data(instances=list(cutoff_time_ids))
-            X_transformed = calculate_feature_matrix(
-                features=self.feature_defs,
-                instance_ids=cutoff_time_ids,
-                entities=entities,
-                relationships=relationships,
-                verbose=self.verbose)
-            X_transformed = X_transformed.loc[cutoff_time_ids]
-        elif isinstance(cutoff_time_ids, pd.DataFrame):
-            ct = cutoff_time_ids
-            entities, relationships = self._filter_data(instances=ct[ct.columns[0]].to_list())
-            X_transformed = calculate_feature_matrix(
-                features=self.feature_defs,
-                cutoff_time=cutoff_time_ids,
-                entities=entities,
-                relationships=relationships,
-                verbose=self.verbose)
-            X_transformed = X_transformed.loc[ct[ct.columns[0]]]
+        if isinstance(X, tuple):
+            es, cutoff_time = X
         else:
-            raise TypeError('instance_ids must be a list or pd.DataFrame')
+            es = X
+            cutoff_time = None
+    
+        X_transformed = calculate_feature_matrix(
+            features=self.feature_defs,
+            instance_ids=None,
+            cutoff_time=cutoff_time,
+            entityset=es,
+            verbose=self.verbose)
+        
         return X_transformed
 
     def get_params(self, deep=True):
@@ -264,36 +230,3 @@ class DFSTransformer(TransformerMixin):
             'verbose': self.verbose,
         }
         return out
-
-    def _filter_data(self, instances):
-        """Create a new entities dictionary, filtering the dataframe for the target entity
-        to include only the instance ids passed in by the user.
-
-        If the user initialized with an entityset, builds the entities dict and relationship
-        list from the entityset. If the user initialized with entities and relationships, copy
-        the original entities dict so it remains untouched."""
-
-        if self.entityset:
-            df = self.entityset[self.target_entity].df
-            entities = {}
-            relationships = []
-            for entity in self.entityset.entities:
-                entities[entity.id] = (entity.df, entity.index, entity.time_index, entity.variable_types)
-            for rel in self.entityset.relationships:
-                relationships.append((rel.parent_entity.id,
-                                      rel.parent_variable.id,
-                                      rel.child_entity.id,
-                                      rel.child_variable.id))
-        else:
-            df = self.entities[self.target_entity][0]
-            # Copy current entities so original input is not mutated
-            entities = copy.deepcopy(self.entities)
-            relationships = self.relationships
-
-        target_index = entities[self.target_entity][1]
-        filtered_df = df.loc[instances]
-        time_index = entities[self.target_entity][2]
-        variable_types = entities[self.target_entity][3]
-        entities[self.target_entity] = (filtered_df, target_index, time_index, variable_types)
-
-        return entities, relationships
