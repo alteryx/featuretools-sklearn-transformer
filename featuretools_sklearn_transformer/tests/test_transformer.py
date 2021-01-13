@@ -47,6 +47,20 @@ def es_customer_filtered(es):
     return new_es
 
 
+def get_entities_and_relationships(es):
+    entities = {}
+    relationships = []
+
+    for entity in es.entities:
+        entities[entity.id] = (entity.df, entity.index, entity.time_index, entity.variable_types)
+
+    for rel in es.relationships:
+        relationships.append((rel.parent_entity.id, rel.parent_variable.name,
+                              rel.child_entity.id, rel.child_variable.name))
+
+    return entities, relationships
+
+
 @pytest.fixture
 def df(es):
     df = es['customers'].df
@@ -57,8 +71,7 @@ def df(es):
 @pytest.fixture
 def pipeline(es):
     pipeline = Pipeline(steps=[
-        ('ft', DFSTransformer(entityset=es,
-                              target_entity="customers",
+        ('ft', DFSTransformer(target_entity="customers",
                               max_features=20)),
         ("numeric", FunctionTransformer(select_numeric, validate=False)),
         ('imp', SimpleImputer()),
@@ -67,11 +80,10 @@ def pipeline(es):
     return pipeline
 
 
-def test_sklearn_transformer(es):
+def test_sklearn_transformer_with_entityset(es):
     # Using with transformers
     pipeline = Pipeline(steps=[
-        ('ft', DFSTransformer(entityset=es,
-                              target_entity="customers")),
+        ('ft', DFSTransformer(target_entity="customers")),
         ("numeric", FunctionTransformer(select_numeric, validate=False)),
         ('sc', StandardScaler()),
     ])
@@ -81,7 +93,21 @@ def test_sklearn_transformer(es):
     assert X_train.shape[0] == 15
 
 
-def test_sklearn_estimator(df, es, pipeline):
+def test_sklearn_transformer_with_entities_and_relationships(es):
+    # Using with transformers
+    pipeline = Pipeline(steps=[
+        ('ft', DFSTransformer(target_entity="customers")),
+        ("numeric", FunctionTransformer(select_numeric, validate=False)),
+        ('sc', StandardScaler()),
+    ])
+    entities, relationships = get_entities_and_relationships(es)
+
+    X_train = pipeline.fit((entities, relationships)).transform((entities, relationships))
+
+    assert X_train.shape[0] == 15
+
+
+def test_sklearn_estimator_with_entityset(df, es, pipeline):
     # Using with estimator
     pipeline.fit(es, y=df.target.values) \
             .predict(es)
@@ -97,6 +123,18 @@ def test_sklearn_estimator(df, es, pipeline):
     # assert isinstance(result, (float))
 
 
+def test_sklearn_estimator_with_entities_and_relationships(df, es, pipeline):
+    # Using with estimator
+    entities, relationships = get_entities_and_relationships(es)
+    pipeline.fit((entities, relationships), y=df.target.values) \
+            .predict((entities, relationships))
+    result = pipeline.score((entities, relationships), df.target.values)
+
+    assert isinstance(result, (float))
+
+
+# cross_val_score cannot split entityset input
+@pytest.mark.xfail
 def test_sklearn_cross_val_score(df, es, pipeline):
     # Using with cross_val_score
     results = cross_val_score(pipeline,
@@ -109,6 +147,8 @@ def test_sklearn_cross_val_score(df, es, pipeline):
     assert isinstance(results[1], (float))
 
 
+# GridSearchCV cannot split entityset input
+@pytest.mark.xfail
 def test_sklearn_gridsearchcv(df, es, pipeline):
     # Using with GridSearchCV
     params = {
@@ -122,7 +162,7 @@ def test_sklearn_gridsearchcv(df, es, pipeline):
     assert len(grid.predict(df['customer_id'].values)) == 15
 
 
-def test_sklearn_cutoff(pipeline, es_customer_filtered):
+def test_sklearn_cutoff_with_entityset(pipeline, es_customer_filtered):
     # Using cutoff_time to filter data
     ct = pd.DataFrame()
     ct['customer_id'] = [1, 2, 3]
@@ -136,9 +176,25 @@ def test_sklearn_cutoff(pipeline, es_customer_filtered):
     assert len(results) == 3
 
 
-def test_cfm_uses_filtered_target_df(es):
+def test_sklearn_cutoff_with_entities_and_relationships(pipeline, es_customer_filtered):
+    # Using cutoff_time to filter data
+    ct = pd.DataFrame()
+    ct['customer_id'] = [1, 2, 3]
+    ct['time'] = pd.to_datetime(['2014-1-1 04:00',
+                                 '2014-1-1 04:00',
+                                 '2014-1-1 04:00'])
+    ct['label'] = [True, True, False]
+
+    entities, relationships = get_entities_and_relationships(es_customer_filtered)
+    results = pipeline.fit(X=((entities, relationships), ct), y=ct.label) \
+                      .predict(X=((entities, relationships), ct))
+
+    assert len(results) == 3
+
+
+def test_cfm_uses_filtered_target_df_with_entityset(es):
     pipeline = Pipeline(steps=[
-        ('ft', DFSTransformer(entityset=es, target_entity='transactions'))
+        ('ft', DFSTransformer(target_entity='transactions'))
     ])
 
     train_ids = [1, 2, 3]
@@ -153,6 +209,28 @@ def test_cfm_uses_filtered_target_df(es):
 
     fm_test = pipeline.transform(test_es)
     assert all(fm_test['sessions.COUNT(transactions)'] == [1, 2, 2])
+    assert set(fm_test.index.values) == set(test_ids)
+
+
+def test_cfm_uses_filtered_target_df_with_entities_and_relationships(es):
+    pipeline = Pipeline(steps=[
+        ('ft', DFSTransformer(target_entity='transactions'))
+    ])
+
+    train_ids = [3, 1, 2]
+    test_ids = [853, 55, 10]
+
+    train_es = filter_transactions(es, ids=train_ids)
+    test_es = filter_transactions(es, ids=test_ids)
+    train_entities, train_relationships = get_entities_and_relationships(train_es)
+    test_entities, test_relationships = get_entities_and_relationships(test_es)
+
+    fm_train = pipeline.fit_transform(X=(train_entities, train_relationships))
+    assert all(fm_train['sessions.COUNT(transactions)'] == [1, 1, 1])
+    assert set(fm_train.index.values) == set(train_ids)
+
+    fm_test = pipeline.transform(X=(test_entities, test_relationships))
+    assert all(fm_test['sessions.COUNT(transactions)'] == [2, 2, 1])
     assert set(fm_test.index.values) == set(test_ids)
 
 

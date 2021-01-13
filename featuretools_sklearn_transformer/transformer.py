@@ -8,9 +8,6 @@ class DFSTransformer(TransformerMixin):
     """
 
     def __init__(self,
-                 entities=None,
-                 relationships=None,
-                 entityset=None,
                  target_entity=None,
                  agg_primitives=None,
                  trans_primitives=None,
@@ -130,9 +127,6 @@ class DFSTransformer(TransformerMixin):
 
         """
         self.feature_defs = []
-        self.entities = entities
-        self.relationships = relationships
-        self.entityset = entityset
         self.target_entity = target_entity
         self.agg_primitives = agg_primitives
         self.trans_primitives = trans_primitives
@@ -158,11 +152,11 @@ class DFSTransformer(TransformerMixin):
             See Also:
                 :func:`synthesis.dfs`
         """
-        if isinstance(X, tuple):
-            es = X[0]
-        else:
-            es = X
+        es, entities, relationships, _ = parse_x_input(X)
+
         self.feature_defs = dfs(entityset=es,
+                                entities=entities,
+                                relationships=relationships,
                                 target_entity=self.target_entity,
                                 agg_primitives=self.agg_primitives,
                                 trans_primitives=self.trans_primitives,
@@ -193,27 +187,22 @@ class DFSTransformer(TransformerMixin):
             See Also:
                 :func:`computational_backends.calculate_feature_matrix`
         """
-        if isinstance(X, tuple):
-            es, cutoff_time = X
-        else:
-            es = X
-            cutoff_time = None
+        es, entities, relationships, cutoff_time = parse_x_input(X)
 
         X_transformed = calculate_feature_matrix(
             features=self.feature_defs,
             instance_ids=None,
             cutoff_time=cutoff_time,
             entityset=es,
+            entities=entities,
+            relationships=relationships,
             verbose=self.verbose)
 
         return X_transformed
 
     def get_params(self, deep=True):
         out = {
-            'entityset': self.entityset,
             'target_entity': self.target_entity,
-            'entities': self.entities,
-            'relationships': self.relationships,
             'agg_primitives': self.agg_primitives,
             'trans_primitives': self.trans_primitives,
             'allowed_paths': self.allowed_paths,
@@ -228,3 +217,33 @@ class DFSTransformer(TransformerMixin):
             'verbose': self.verbose,
         }
         return out
+
+
+def parse_x_input(X):
+    if isinstance(X, tuple):
+        if isinstance(X[0], tuple):
+            # Input of ((entities, relationships), cutoff_time)
+            entities = X[0][0]
+            relationships = X[0][1]
+            es = None
+            cutoff_time = X[1]
+        elif isinstance(X[0], dict):
+            # Input of (entities, relationships)
+            entities = X[0]
+            relationships = X[1]
+            es = None
+            cutoff_time = None
+        else:
+            # Input of (entityset, cutoff_time)
+            es = X[0]
+            entities = None
+            relationships = None
+            cutoff_time = X[1]
+    else:
+        # Input of entityset
+        es = X
+        entities = None
+        relationships = None
+        cutoff_time = None
+
+    return es, entities, relationships, cutoff_time
