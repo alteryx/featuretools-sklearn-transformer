@@ -25,18 +25,6 @@ class DFSTransformer(TransformerMixin):
 
         Args:
 
-            entities (dict[str -> tuple(pd.DataFrame, str, str)]): Dictionary
-                of entities. Entries take the format
-                {entity id -> (dataframe, id column, (time_column))}.
-
-            relationships (list[(str, str, str, str)]): List of relationships
-                between entities. List items are a tuple with the format
-                (parent entity id, parent variable, child entity id, child
-                variable).
-
-            entityset (EntitySet): An already initialized entityset. Required
-                if entities and relationships are not defined.
-
             target_entity (str): Entity id of entity on which to make
                 predictions.
 
@@ -95,35 +83,37 @@ class DFSTransformer(TransformerMixin):
                 from sklearn.ensemble import ExtraTreesClassifier
 
                 # Get example data
-                n_customers = 3
-                es = ft.demo.load_mock_customer(return_entityset=True, n_customers=5)
+                train_es = ft.demo.load_mock_customer(return_entityset=True, n_customers=3)
+                test_es = ft.demo.load_mock_customer(return_entityset=True, n_customers=2)
                 y = [True, False, True]
 
                 # Build dataset
                 pipeline = Pipeline(steps=[
-                    ('ft', DFSTransformer(entityset=es,
-                                          target_entity="customers",
-                                          max_features=2)),
+                    ('ft', DFSTransformer(target_entity="customers",
+                                        max_features=2)),
                     ('et', ExtraTreesClassifier(n_estimators=100))
                 ])
 
                 # Fit and predict
-                pipeline.fit([1, 2, 3], y=y) # fit on first 3 customers
-                pipeline.predict_proba([4,5]) # predict probability of each class on last 2
-                pipeline.predict([4,5]) # predict on last 2
+                pipeline.fit(X=train_es, y=y) # fit on 3 customers in training entityset
+                pipeline.predict_proba(test_es) # predict probability of each class on test entityset
+                pipeline.predict(test_es) # predict on test entityset
 
                 # Same as above, but using cutoff times
-                ct = pd.DataFrame()
-                ct['customer_id'] = [1, 2, 3, 4, 5]
-                ct['time'] = pd.to_datetime(['2014-1-1 04:00',
-                                             '2014-1-2 17:20',
-                                             '2014-1-4 09:53',
-                                             '2014-1-4 13:48',
-                                             '2014-1-5 15:32'])
+                train_ct = pd.DataFrame()
+                train_ct['customer_id'] = [1, 2, 3]
+                train_ct['time'] = pd.to_datetime(['2014-1-1 04:00',
+                                                   '2014-1-2 17:20',
+                                                   '2014-1-4 09:53'])
 
-                pipeline.fit(ct.head(3), y=y)
-                pipeline.predict_proba(ct.tail(2))
-                pipeline.predict(ct.tail(2))
+                pipeline.fit(X=(train_es, train_ct), y=y)
+
+                test_ct = pd.DataFrame()
+                test_ct['customer_id'] = [1, 2]
+                test_ct['time'] = pd.to_datetime(['2014-1-4 13:48',
+                                                  '2014-1-5 15:32'])
+                pipeline.predict_proba((test_es, test_ct))
+                pipeline.predict((test_es, test_ct))
 
         """
         self.feature_defs = []
@@ -144,10 +134,15 @@ class DFSTransformer(TransformerMixin):
     def fit(self, X, y=None):
         """Wrapper for DFS
 
-            Calculates a list of features given a dictionary of
-            entities and a list of relationships. Alternatively,
-            an EntitySet can be passed instead of the entities
-            and relationships.
+            Calculates a list of features given a dictionary of entities and a list
+            of relationships. Alternatively, an EntitySet can be passed instead of
+            the entities and relationships.
+
+            Args:
+                X: (ft.Entityset or tuple): Entityset to calculate features on. If a tuple is
+                    passed it can take one of these forms: (entityset, cutoff_time_dataframe),
+                    (entities, relationships), or ((entities, relationships), cutoff_time_dataframe)
+                y: (iterable): Training targets
 
             See Also:
                 :func:`synthesis.dfs`
@@ -177,12 +172,12 @@ class DFSTransformer(TransformerMixin):
     def transform(self, X):
         """Wrapper for calculate_feature_matrix
 
-            Calculates a feature matrix for a the given set of instance ids and calculation
-            times.
+            Calculates a feature matrix for a the given input data and calculation times.
 
             Args:
-                cutoff_time_ids (list | DataFrame): Instances filtered to
-                    calculate features on.
+                X: (ft.Entityset or tuple): Entityset to calculate features on. If a tuple is
+                    passed it can take one of these forms: (entityset, cutoff_time_dataframe),
+                    (entities, relationships), or ((entities, relationships), cutoff_time_dataframe)
 
             See Also:
                 :func:`computational_backends.calculate_feature_matrix`
