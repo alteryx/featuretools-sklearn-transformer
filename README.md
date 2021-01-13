@@ -24,6 +24,10 @@ The input supplied for `X` can take several formats:
 - To use a list of Entities and Relationships without cutoff times, pass a tuple of the form (entities, relationships)
 - To use a list of Entities and Relationships with a cutoff times DataFrame, pass a tuple of the form ((entities, relationships), cutoff_time_df)
 
+Note that because this transformer requires a Featuretools EntitySet or Entities and relationships as input, it does not currently work
+with certain methods such as `sklearn.model_selection.cross_val_score` or `sklearn.model_selection.GridSearchCV` which expect the `X` values
+to be an iterable which can be split by the method.
+
 The example below shows how to use the transformer with an EntitySet, both with and without a cutoff time DataFrame.
 
 ```python
