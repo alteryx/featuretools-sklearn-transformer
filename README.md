@@ -39,7 +39,7 @@ train_es = ft.demo.load_mock_customer(return_entityset=True, n_customers=3)
 test_es = ft.demo.load_mock_customer(return_entityset=True, n_customers=2)
 y = [True, False, True]
 
-# Build dataset
+# Build pipeline
 pipeline = Pipeline(steps=[
     ('ft', DFSTransformer(target_entity="customers",
                         max_features=2)),
