@@ -13,7 +13,7 @@ pip install featuretools_sklearn_transformer
 ### Use
 
 To use the transformer in a pipeline, initialize an instance of the transformer by passing in
-a the parameters you would like to use for calculating features. To fit the model and generate features for
+the parameters you would like to use for calculating features. To fit the model and generate features for
 the training data, pass in an entityset or list of entities and relationships containing only the relevant
 training data as the `X` input, along with the training targets as the `y` input. To generate a feature matrix from test data, pass in
 an entityset containing only the relevant test data as the `X` input.
@@ -46,12 +46,12 @@ y = [True, False, True]
 # Build pipeline
 pipeline = Pipeline(steps=[
     ('ft', DFSTransformer(target_entity="customers",
-                        max_features=2)),
+                          max_features=2)),
     ('et', ExtraTreesClassifier(n_estimators=100))
 ])
 
 # Fit and predict
-pipeline.fit(X=train_es, y=y) # fit on 3 customers in training entityset
+pipeline.fit(X=train_es, y=y) # fit on customers in training entityset
 pipeline.predict_proba(test_es) # predict probability of each class on test entityset
 pipeline.predict(test_es) # predict on test entityset
 
@@ -59,15 +59,15 @@ pipeline.predict(test_es) # predict on test entityset
 train_ct = pd.DataFrame()
 train_ct['customer_id'] = [1, 2, 3]
 train_ct['time'] = pd.to_datetime(['2014-1-1 04:00',
-                                    '2014-1-2 17:20',
-                                    '2014-1-4 09:53'])
+                                   '2014-1-2 17:20',
+                                   '2014-1-4 09:53'])
 
 pipeline.fit(X=(train_es, train_ct), y=y)
 
 test_ct = pd.DataFrame()
 test_ct['customer_id'] = [1, 2]
 test_ct['time'] = pd.to_datetime(['2014-1-4 13:48',
-                                    '2014-1-5 15:32'])
+                                  '2014-1-5 15:32'])
 pipeline.predict_proba((test_es, test_ct))
 pipeline.predict((test_es, test_ct))
 ```
