@@ -12,6 +12,24 @@ pip install featuretools_sklearn_transformer
 
 ### Use
 
+To use the transformer in a pipeline, initialize an instance of the transformer by passing in
+the parameters you would like to use for calculating features. To fit the model and generate features for
+the training data, pass in an entityset or list of entities and relationships containing only the relevant
+training data as the `X` input, along with the training targets as the `y` input. To generate a feature matrix from test data, pass in
+an entityset containing only the relevant test data as the `X` input.
+
+The input supplied for `X` can take several formats:
+- To use a Featuretools EntitySet without cutoff times, simply pass in the EntitySet
+- To use a Featuretools EntitySet with a cutoff times DataFrame, pass in a tuple of the form (EntitySet, cutoff_time_df)
+- To use a list of Entities and Relationships without cutoff times, pass a tuple of the form (entities, relationships)
+- To use a list of Entities and Relationships with a cutoff times DataFrame, pass a tuple of the form ((entities, relationships), cutoff_time_df)
+
+Note that because this transformer requires a Featuretools EntitySet or Entities and relationships as input, it does not currently work
+with certain methods such as `sklearn.model_selection.cross_val_score` or `sklearn.model_selection.GridSearchCV` which expect the `X` values
+to be an iterable which can be split by the method.
+
+The example below shows how to use the transformer with an EntitySet, both with and without a cutoff time DataFrame.
+
 ```python
 import featuretools as ft
 import pandas as pd
@@ -20,41 +38,42 @@ from featuretools.wrappers import DFSTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import ExtraTreesClassifier
 
-# Get examle data
-n_customers = 3
-es = ft.demo.load_mock_customer(return_entityset=True, n_customers=5)
+# Get example data
+train_es = ft.demo.load_mock_customer(return_entityset=True, n_customers=3)
+test_es = ft.demo.load_mock_customer(return_entityset=True, n_customers=2)
 y = [True, False, True]
 
 # Build pipeline
 pipeline = Pipeline(steps=[
-    ('ft', DFSTransformer(entityset=es,
-                            target_entity="customers",
-                            max_features=2)),
+    ('ft', DFSTransformer(target_entity="customers",
+                          max_features=2)),
     ('et', ExtraTreesClassifier(n_estimators=100))
 ])
 
 # Fit and predict
-pipeline.fit([1, 2, 3], y=y) # fit on first 3 customers
-pipeline.predict_proba([4,5]) # predict probability of each class on last 2
-pipeline.predict([4,5]) # predict on last 2
+pipeline.fit(X=train_es, y=y) # fit on customers in training entityset
+pipeline.predict_proba(test_es) # predict probability of each class on test entityset
+pipeline.predict(test_es) # predict on test entityset
 
 # Same as above, but using cutoff times
-ct = pd.DataFrame()
-ct['customer_id'] = [1, 2, 3, 4, 5]
-ct['time'] = pd.to_datetime(['2014-1-1 04:00',
-                                '2014-1-2 17:20',
-                                '2014-1-4 09:53',
-                                '2014-1-4 13:48',
-                                '2014-1-5 15:32'])
+train_ct = pd.DataFrame()
+train_ct['customer_id'] = [1, 2, 3]
+train_ct['time'] = pd.to_datetime(['2014-1-1 04:00',
+                                   '2014-1-2 17:20',
+                                   '2014-1-4 09:53'])
 
-pipeline.fit(ct.head(3), y=y)
-pipeline.predict_proba(ct.tail(2))
-pipeline.predict(ct.tail(2))
+pipeline.fit(X=(train_es, train_ct), y=y)
+
+test_ct = pd.DataFrame()
+test_ct['customer_id'] = [1, 2]
+test_ct['time'] = pd.to_datetime(['2014-1-4 13:48',
+                                  '2014-1-5 15:32'])
+pipeline.predict_proba((test_es, test_ct))
+pipeline.predict((test_es, test_ct))
 ```
 
-## Feature Labs
-<a href="https://www.featurelabs.com/">
-    <img src="http://www.featurelabs.com/wp-content/uploads/2017/12/logo.png" alt="Featuretools" />
-</a>
+## Built at Alteryx Innovation Labs
 
-featuretools-sklearn-transformer is an open source project created by [Feature Labs](https://www.featurelabs.com/). To see the other open source projects we're working on visit Feature Labs [Open Source](https://www.featurelabs.com/open). If building impactful data science pipelines is important to you or your business, please [get in touch](https://www.featurelabs.com/contact/).
+<a href="https://www.alteryx.com/innovation-labs">
+    <img src="https://evalml-web-images.s3.amazonaws.com/alteryx_innovation_labs.png" alt="Alteryx Innovation Labs" />
+</a>
