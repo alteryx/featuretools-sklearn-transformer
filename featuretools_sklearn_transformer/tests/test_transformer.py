@@ -69,7 +69,7 @@ def df(es):
 
 
 @pytest.fixture
-def pipeline(es):
+def pipeline():
     pipeline = Pipeline(steps=[
         ('ft', DFSTransformer(target_entity="customers",
                               max_features=20)),
