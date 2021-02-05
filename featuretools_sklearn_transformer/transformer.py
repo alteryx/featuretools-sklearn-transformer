@@ -90,12 +90,12 @@ class DFSTransformer(TransformerMixin):
                 # Build pipeline
                 pipeline = Pipeline(steps=[
                     ('ft', DFSTransformer(target_entity="customers",
-                                        max_features=2)),
+                                          max_features=2)),
                     ('et', ExtraTreesClassifier(n_estimators=100))
                 ])
 
                 # Fit and predict
-                pipeline.fit(X=train_es, y=y) # fit on 3 customers in training entityset
+                pipeline.fit(X=train_es, y=y) # fit on customers in training entityset
                 pipeline.predict_proba(test_es) # predict probability of each class on test entityset
                 pipeline.predict(test_es) # predict on test entityset
 
