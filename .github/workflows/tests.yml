@@ -4,8 +4,35 @@ on:
 
 name: Tests
 jobs:
+  entry_point_test:
+    name: Entry Point Test - Python ${{ matrix.python_version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: ["3.6", "3.7", "3.8"]
+    steps:
+      - name: Set up python ${{ matrix.python_version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python_version }}
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+      - name: Build source distribution
+        run: make package_build
+      - name: Install package with test requirements
+        run: |
+          pip config --site set global.progress_bar off
+          pip install --upgrade pip
+          pip install dist/package/
+          pip install -r dist/package/test-requirements.txt
+      - name: Test entry point
+        run: make entry-point-test
+
   lint_tests:
-    name: Lint Tests / Python ${{ matrix.python-version }}
+    name: Lint Tests - Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -32,7 +59,7 @@ jobs:
         run: cd dist/package && make lint_tests -f ../../Makefile
 
   unit_tests:
-    name: Unit Tests / Python ${{ matrix.python-version }}
+    name: Unit Tests - Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
