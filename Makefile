@@ -21,7 +21,7 @@ unit-tests:
 
 .PHONY: unit_tests
 unit_tests:
-	pytest composeml --cache-clear --show-capture=stderr -vv ${addopts}
+	pytest --cache-clear --show-capture=stderr -vv ${addopts}
 
 .PHONY: installdeps
 installdeps:
