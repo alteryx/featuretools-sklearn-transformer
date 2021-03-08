@@ -1,7 +1,6 @@
 # featuretools-sklearn-transformer
 
-[![CircleCI](https://circleci.com/gh/FeatureLabs/featuretools-sklearn-transformer/tree/master.svg?style=shield)](https://circleci.com/gh/FeatureLabs/featuretools-sklearn-transformer/tree/master)
-[![codecov](https://codecov.io/gh/FeatureLabs/featuretools-sklearn-transformer/branch/master/graph/badge.svg)](https://codecov.io/gh/FeatureLabs/featuretools-sklearn-transformer)
+![Tests](https://github.com/FeatureLabs/featuretools-sklearn-transformer/workflows/Tests/badge.svg)
 
 [Featuretools](https://github.com/FeatureLabs/featuretools)' DFS as a scikit-learn transformer
 
