@@ -1,8 +1,9 @@
 # featuretools-sklearn-transformer
 
 ![Tests](https://github.com/FeatureLabs/featuretools-sklearn-transformer/workflows/Tests/badge.svg)
+[![Coverage Status](https://codecov.io/gh/alteryx/featuretools-sklearn-transformer/branch/main/graph/badge.svg)](https://codecov.io/gh/alteryx/featuretools-sklearn-transformer)
 
-[Featuretools](https://github.com/FeatureLabs/featuretools)' DFS as a scikit-learn transformer
+[Featuretools](https://github.com/alteryx/featuretools)' DFS as a scikit-learn transformer
 
 ### Install
 ```shell
