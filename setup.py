@@ -13,7 +13,7 @@ setup(
     author_email='support@featurelabs.com',
     license='BSD 3-clause',
     url='http://www.featurelabs.com/',
-    python_requires='>=3.6, <4',
+    python_requires='>=3.7, <4',
     install_requires=open('requirements.txt').readlines(),
     packages=find_packages(),
     description='Featuretools Transformer for Scikit-Learn Pipeline use.',
