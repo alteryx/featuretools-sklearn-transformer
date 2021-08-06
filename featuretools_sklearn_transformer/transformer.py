@@ -8,13 +8,13 @@ class DFSTransformer(TransformerMixin):
     """
 
     def __init__(self,
-                 target_entity=None,
+                 target_dataframe_name=None,
                  agg_primitives=None,
                  trans_primitives=None,
                  allowed_paths=None,
                  max_depth=2,
-                 ignore_entities=None,
-                 ignore_variables=None,
+                 ignore_dataframes=None,
+                 ignore_columns=None,
                  seed_features=None,
                  drop_contains=None,
                  drop_exact=None,
@@ -25,7 +25,7 @@ class DFSTransformer(TransformerMixin):
 
         Args:
 
-            target_entity (str): Entity id of entity on which to make
+            target_dataframe_name (str): Name of dataframe on which to make
                 predictions.
 
             agg_primitives (list[str or AggregationPrimitive], optional): List
@@ -40,16 +40,16 @@ class DFSTransformer(TransformerMixin):
                     Default: ["day", "year", "month", "weekday", "haversine",
                               "num_words", "num_characters"]
 
-            allowed_paths (list[list[str]]): Allowed entity paths on which to
+            allowed_paths (list[list[str]]): Allowed dataframe paths on which to
                 make features.
 
             max_depth (int) : Maximum allowed depth of features.
 
-            ignore_entities (list[str], optional): List of entities to
+            ignore_dataframes (list[str], optional): List of dataframes to
                 blacklist when creating features.
 
-            ignore_variables (dict[str -> list[str]], optional): List of
-                specific variables within each entity to blacklist when
+            ignore_columns (dict[str -> list[str]], optional): List of
+                specific columns within each dataframe to blacklist when
                 creating features.
 
             seed_features (list[:class:`.FeatureBase`]): List of manually
@@ -89,7 +89,7 @@ class DFSTransformer(TransformerMixin):
 
                 # Build pipeline
                 pipeline = Pipeline(steps=[
-                    ('ft', DFSTransformer(target_entity="customers",
+                    ('ft', DFSTransformer(target_dataframe_name="customers",
                                           max_features=2)),
                     ('et', ExtraTreesClassifier(n_estimators=100))
                 ])
@@ -117,13 +117,13 @@ class DFSTransformer(TransformerMixin):
 
         """
         self.feature_defs = []
-        self.target_entity = target_entity
+        self.target_dataframe_name = target_dataframe_name
         self.agg_primitives = agg_primitives
         self.trans_primitives = trans_primitives
         self.allowed_paths = allowed_paths
         self.max_depth = max_depth
-        self.ignore_entities = ignore_entities
-        self.ignore_variables = ignore_variables
+        self.ignore_dataframes = ignore_dataframes
+        self.ignore_columns = ignore_columns
         self.seed_features = seed_features
         self.drop_contains = drop_contains
         self.drop_exact = drop_exact
@@ -134,31 +134,31 @@ class DFSTransformer(TransformerMixin):
     def fit(self, X, y=None):
         """Wrapper for DFS
 
-            Calculates a list of features given a dictionary of entities and a list
+            Calculates a list of features given a dictionary of dataframes and a list
             of relationships. Alternatively, an EntitySet can be passed instead of
-            the entities and relationships.
+            the dataframes and relationships.
 
             Args:
                 X: (ft.Entityset or tuple): Entityset to calculate features on. If a tuple is
                     passed it can take one of these forms: (entityset, cutoff_time_dataframe),
-                    (entities, relationships), or ((entities, relationships), cutoff_time_dataframe)
+                    (dataframes, relationships), or ((dataframes, relationships), cutoff_time_dataframe)
                 y: (iterable): Training targets
 
             See Also:
                 :func:`synthesis.dfs`
         """
-        es, entities, relationships, _ = parse_x_input(X)
+        es, dataframes, relationships, _ = parse_x_input(X)
 
         self.feature_defs = dfs(entityset=es,
-                                entities=entities,
+                                dataframes=dataframes,
                                 relationships=relationships,
-                                target_entity=self.target_entity,
+                                target_dataframe_name=self.target_dataframe_name,
                                 agg_primitives=self.agg_primitives,
                                 trans_primitives=self.trans_primitives,
                                 allowed_paths=self.allowed_paths,
                                 max_depth=self.max_depth,
-                                ignore_entities=self.ignore_entities,
-                                ignore_variables=self.ignore_variables,
+                                ignore_dataframes=self.ignore_dataframes,
+                                ignore_columns=self.ignore_columns,
                                 seed_features=self.seed_features,
                                 drop_contains=self.drop_contains,
                                 drop_exact=self.drop_exact,
@@ -177,19 +177,19 @@ class DFSTransformer(TransformerMixin):
             Args:
                 X: (ft.Entityset or tuple): Entityset to calculate features on. If a tuple is
                     passed it can take one of these forms: (entityset, cutoff_time_dataframe),
-                    (entities, relationships), or ((entities, relationships), cutoff_time_dataframe)
+                    (dataframes, relationships), or ((dataframes, relationships), cutoff_time_dataframe)
 
             See Also:
                 :func:`computational_backends.calculate_feature_matrix`
         """
-        es, entities, relationships, cutoff_time = parse_x_input(X)
+        es, dataframes, relationships, cutoff_time = parse_x_input(X)
 
         X_transformed = calculate_feature_matrix(
             features=self.feature_defs,
             instance_ids=None,
             cutoff_time=cutoff_time,
             entityset=es,
-            entities=entities,
+            dataframes=dataframes,
             relationships=relationships,
             verbose=self.verbose)
 
@@ -197,13 +197,13 @@ class DFSTransformer(TransformerMixin):
 
     def get_params(self, deep=True):
         out = {
-            'target_entity': self.target_entity,
+            'target_dataframe_name': self.target_dataframe_name,
             'agg_primitives': self.agg_primitives,
             'trans_primitives': self.trans_primitives,
             'allowed_paths': self.allowed_paths,
             'max_depth': self.max_depth,
-            'ignore_entities': self.ignore_entities,
-            'ignore_variables': self.ignore_variables,
+            'ignore_dataframes': self.ignore_dataframes,
+            'ignore_columns': self.ignore_columns,
             'seed_features': self.seed_features,
             'drop_contains': self.drop_contains,
             'drop_exact': self.drop_exact,
@@ -217,28 +217,28 @@ class DFSTransformer(TransformerMixin):
 def parse_x_input(X):
     if isinstance(X, tuple):
         if isinstance(X[0], tuple):
-            # Input of ((entities, relationships), cutoff_time)
-            entities = X[0][0]
+            # Input of ((dataframes, relationships), cutoff_time)
+            dataframes = X[0][0]
             relationships = X[0][1]
             es = None
             cutoff_time = X[1]
         elif isinstance(X[0], dict):
-            # Input of (entities, relationships)
-            entities = X[0]
+            # Input of (dataframes, relationships)
+            dataframes = X[0]
             relationships = X[1]
             es = None
             cutoff_time = None
         else:
             # Input of (entityset, cutoff_time)
             es = X[0]
-            entities = None
+            dataframes = None
             relationships = None
             cutoff_time = X[1]
     else:
         # Input of entityset
         es = X
-        entities = None
+        dataframes = None
         relationships = None
         cutoff_time = None
 
-    return es, entities, relationships, cutoff_time
+    return es, dataframes, relationships, cutoff_time
