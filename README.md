@@ -15,17 +15,17 @@ pip install featuretools_sklearn_transformer
 
 To use the transformer in a pipeline, initialize an instance of the transformer by passing in
 the parameters you would like to use for calculating features. To fit the model and generate features for
-the training data, pass in an entityset or list of entities and relationships containing only the relevant
+the training data, pass in an entityset or list of dataframes and relationships containing only the relevant
 training data as the `X` input, along with the training targets as the `y` input. To generate a feature matrix from test data, pass in
 an entityset containing only the relevant test data as the `X` input.
 
 The input supplied for `X` can take several formats:
 - To use a Featuretools EntitySet without cutoff times, simply pass in the EntitySet
 - To use a Featuretools EntitySet with a cutoff times DataFrame, pass in a tuple of the form (EntitySet, cutoff_time_df)
-- To use a list of Entities and Relationships without cutoff times, pass a tuple of the form (entities, relationships)
-- To use a list of Entities and Relationships with a cutoff times DataFrame, pass a tuple of the form ((entities, relationships), cutoff_time_df)
+- To use a list DataFrames and Relationships without cutoff times, pass a tuple of the form (dataframes, relationships)
+- To use a list of DataFrames and Relationships with a cutoff times DataFrame, pass a tuple of the form ((dataframes, relationships), cutoff_time_df)
 
-Note that because this transformer requires a Featuretools EntitySet or Entities and relationships as input, it does not currently work
+Note that because this transformer requires a Featuretools EntitySet or dataframes and relationships as input, it does not currently work
 with certain methods such as `sklearn.model_selection.cross_val_score` or `sklearn.model_selection.GridSearchCV` which expect the `X` values
 to be an iterable which can be split by the method.
 
@@ -46,7 +46,7 @@ y = [True, False, True]
 
 # Build pipeline
 pipeline = Pipeline(steps=[
-    ('ft', DFSTransformer(target_entity="customers",
+    ('ft', DFSTransformer(target_dataframe_name="customers",
                           max_features=2)),
     ('et', ExtraTreesClassifier(n_estimators=100))
 ])
