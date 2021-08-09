@@ -1,5 +1,4 @@
 # featuretools>=1.0.0
-featuretools @ git+https://github.com/alteryx/featuretools.git@woodwork-integration
 numpy
 pandas
 scikit-learn>=0.20.0,!=0.22
